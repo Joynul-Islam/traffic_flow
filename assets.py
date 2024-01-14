@@ -13,11 +13,10 @@ class Vehicle:
         meters_per_frame = (self.current_link.velocity * 1.60934 * 1000) / 60 / 60 / frame_rate
 
         if self.current_link.congestion_ahead:
+            # dont move vehicle if its at the edge of the current link and about to go into a congested link or other cars are waiting in front
             temp = copy.copy(self)
             temp.x += meters_per_frame + len(temp.current_link.vehicles) * Vehicle.avg_vehicle_length
-            print(temp==self)
             if not self.current_link.contains(temp):
-                # dont move vehicle if its at the edge of the current link and about to go into a congested link
                 Vehicle.congested_travel_time += (1 / frame_rate) / 60  # minutes
 
             else:
