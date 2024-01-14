@@ -1,3 +1,4 @@
+import copy
 
 class Vehicle:
     avg_vehicle_length = 5
@@ -9,12 +10,33 @@ class Vehicle:
         self.current_link: Link = None
 
     def move(self, frame_rate):
-        self.x += (self.current_link.velocity * 1.60934 * 1000) / 60 / 60 / frame_rate  # meters per second
-        if self.current_link.velocity < self.current_link.speed_limit:
-            # congestion time relative to how much slower than speed limit vehicles are going
-            Vehicle.congested_travel_time += (abs((self.current_link.velocity/self.current_link.speed_limit) - 1) / frame_rate) / 60 # minutes
+        meters_per_frame = (self.current_link.velocity * 1.60934 * 1000) / 60 / 60 / frame_rate
+
+        if self.current_link.congestion_ahead:
+            temp = copy.copy(self)
+            temp.x += meters_per_frame + len(temp.current_link.vehicles) * Vehicle.avg_vehicle_length
+            print(temp==self)
+            if not self.current_link.contains(temp):
+                # dont move vehicle if its at the edge of the current link and about to go into a congested link
+                Vehicle.congested_travel_time += (1 / frame_rate) / 60  # minutes
+
+            else:
+                # if the next link is congested but there is still room to move forward, move
+                self.x += meters_per_frame
+                if self.current_link.velocity < self.current_link.speed_limit:
+                    # congestion time relative to how much slower than speed limit vehicles are going
+                    Vehicle.congested_travel_time += (abs((self.current_link.velocity/self.current_link.speed_limit) - 1) / frame_rate) / 60  # minutes
+                else:
+                    Vehicle.free_flow_travel_time += (1/frame_rate)/60 #minutes
+
         else:
-            Vehicle.free_flow_travel_time += (1/frame_rate)/60 #minutes
+            self.x += meters_per_frame
+            if self.current_link.velocity < self.current_link.speed_limit:
+                # congestion time relative to how much slower than speed limit vehicles are going
+                Vehicle.congested_travel_time += (abs((
+                                                                  self.current_link.velocity / self.current_link.speed_limit) - 1) / frame_rate) / 60  # minutes
+            else:
+                Vehicle.free_flow_travel_time += (1 / frame_rate) / 60  # minutes
 
 
 class Link:
@@ -29,6 +51,7 @@ class Link:
         self.incident_exists = False
         self.previous_link = None
         self.next_link = None
+        self.congestion_ahead = False
 
     def update_density(self):
         """
@@ -59,12 +82,7 @@ class Link:
         """
         checks if a vehicle resides within the link
         """
-        if veh.x >= self.x_start:
-            if veh.x < self.x_start + self.length:
-                self.vehicles.append(veh)
-                return True
-
-        return False
+        return (veh.x >= self.x_start) and (veh.x < self.x_start + self.length)
 
 
 class Slider:

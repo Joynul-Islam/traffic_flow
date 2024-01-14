@@ -90,16 +90,20 @@ while True:
             if link.density >=1:
                 # if max density is reached, force previous link vehicles to stop and wait
                 if link.previous_link is not None:
-                    link.previous_link.velocity=0
+                    link.previous_link.congestion_ahead = True
                 else:
                     # if first link is congested, stop inflow rate
                     flow_rate_slider.inflow_rate=0
             else:
+                if link.previous_link is not None:
+                    link.previous_link.congestion_ahead = False
+
                 # if start of highway becomes is clear (less than max density), resume inflow
                 if flow_rate_slider.inflow_rate == 0:
                     flow_rate_slider.inflow_rate = 10
             if link.contains(vehicle):
                 vehicle.current_link = link
+                link.vehicles.append(vehicle)
                 break
 
         if vehicle.current_link is None:
