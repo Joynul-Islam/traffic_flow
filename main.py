@@ -88,10 +88,16 @@ while True:
         vehicle.current_link = None
         for link in links:
             if link.density >=1:
+                # if max density is reached, force previous link vehicles to stop and wait
                 if link.previous_link is not None:
                     link.previous_link.velocity=0
                 else:
+                    # if first link is congested, stop inflow rate
                     flow_rate_slider.inflow_rate=0
+            else:
+                # if start of highway becomes is clear (less than max density), resume inflow
+                if flow_rate_slider.inflow_rate == 0:
+                    flow_rate_slider.inflow_rate = 10
             if link.contains(vehicle):
                 vehicle.current_link = link
                 break
@@ -112,8 +118,8 @@ while True:
 
         # display text for density, velocity and vehicle count per link
         vehicle_count = font.render(f"#:{len(link.vehicles)}", True, (255, 255, 255))
-        link_density = font.render(f"p:{link.density}", True, (255, 255, 255))
-        link_velocity = font.render(f"v:{link.velocity}", True, (255, 255, 255))
+        link_density = font.render(f"p:{link.density:.2f}", True, (255, 255, 255))
+        link_velocity = font.render(f"v:{link.velocity:.0f}", True, (255, 255, 255))
         screen.blit(vehicle_count, (link.x_start+(link.length/2), 10))
         screen.blit(link_density, (link.x_start + (link.length / 2), height-50))
         screen.blit(link_velocity, (link.x_start + (link.length / 2), height-30))
