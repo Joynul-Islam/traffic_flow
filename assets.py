@@ -12,7 +12,7 @@ class Vehicle:
         self.x += (self.current_link.velocity * 1.60934 * 1000) / 60 / 60 / frame_rate  # meters per second
         if self.current_link.velocity < self.current_link.speed_limit:
             # congestion time relative to how much slower than speed limit vehicles are going
-            Vehicle.congested_travel_time += ((1 - (self.current_link.velocity/self.current_link.speed_limit))/frame_rate) / 60 # minutes
+            Vehicle.congested_travel_time += (abs((self.current_link.velocity/self.current_link.speed_limit) - 1) / frame_rate) / 60 # minutes
         else:
             Vehicle.free_flow_travel_time += (1/frame_rate)/60 #minutes
 
